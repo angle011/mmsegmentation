@@ -86,6 +86,7 @@ class CustomDataset(Dataset):
                  ignore_index=255,
                  reduce_zero_label=False,
                  classes=None,
+                 weight=None,
                  palette=None,
                  gt_seg_map_loader_cfg=None):
         self.pipeline = Compose(pipeline)
@@ -99,6 +100,7 @@ class CustomDataset(Dataset):
         self.ignore_index = ignore_index
         self.reduce_zero_label = reduce_zero_label
         self.label_map = None
+        self.weight = weight
         self.CLASSES, self.PALETTE = self.get_classes_and_palette(
             classes, palette)
         self.gt_seg_map_loader = LoadAnnotations(
@@ -212,6 +214,17 @@ class CustomDataset(Dataset):
             dict: Training data and annotation after pipeline with new keys
                 introduced by pipeline.
         """
+
+        # img_info = self.img_infos[idx]
+        #         ann_info = self.get_ann_info(idx)
+        #         cut_info = self.img_infos[idx % 10]
+        #         results = dict(img_info=img_info, ann_info=ann_info,cut_info=cut_info)
+        #         self.pre_pipeline(results)
+        #         cut_img = mmcv.imread(results['img_prefix'] + '/' + results['cut_info']['filename'])
+        #         cut_ann = mmcv.imread(results['seg_prefix'] + '/' + results['cut_info']['ann']['seg_map'])
+        #         results['cut_img']=cut_img
+        #         results['cut_ann']=cut_ann
+        #         return self.pipeline(results)
 
         img_info = self.img_infos[idx]
         ann_info = self.get_ann_info(idx)
@@ -379,7 +392,7 @@ class CustomDataset(Dataset):
         """
         if isinstance(metric, str):
             metric = [metric]
-        allowed_metrics = ['mIoU', 'mDice', 'mFscore']
+        allowed_metrics = ['mIoU', 'mDice', 'mFscore', 'fwIoU']
         if not set(metric).issubset(set(allowed_metrics)):
             raise KeyError('metric {} is not supported'.format(metric))
 
@@ -435,6 +448,10 @@ class CustomDataset(Dataset):
             else:
                 summary_table_data.add_column('m' + key, [val])
 
+        fwIoU = np.array([self.weight[i] * ret_metrics['IoU'][i] for i in range(len(self.weight))]).sum()
+        fwIoU = np.round(fwIoU * 100, 2)
+        if self.weight is not None:
+            summary_table_data.add_column('fwIoU', [fwIoU])
         print_log('per class results:', logger)
         print_log('\n' + class_table_data.get_string(), logger=logger)
         print_log('Summary:', logger)
@@ -453,5 +470,8 @@ class CustomDataset(Dataset):
                 key + '.' + str(name): value[idx] / 100.0
                 for idx, name in enumerate(class_names)
             })
+        # if metric=='fwIou':
+        #     # import numpy as np
+        #     eval_results['fwIou']=np.array([self.weight[i]*ret_metrics['IoU'][i] for i in range(len(self.weight))]).sum()
 
         return eval_results

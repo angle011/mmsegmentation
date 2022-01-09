@@ -74,11 +74,11 @@ def inference_model(config_name, checkpoint, args, logger=None):
 
     model = init_segmentor(cfg, checkpoint, device=args.device)
     # test a single image
-    result = inference_segmentor(model, args.img)
+    result = inference_segmentor(model, args.dst)
 
     # show the results
     if args.show:
-        show_result_pyplot(model, args.img, result)
+        show_result_pyplot(model, args.dst, result)
     return result
 
 

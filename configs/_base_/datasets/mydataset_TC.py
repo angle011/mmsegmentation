@@ -2,7 +2,8 @@
 dataset_type = 'mydata_TCDataset'
 data_root = '/data/tianchi_SegGame'
 img_norm_cfg = dict(
-    mean=[0.625, 0.448, 0.688], std= [0.131, 0.177, 0.101], to_rgb=True)
+    mean=[62.5, 44.8, 68.8],
+    std=[13.1, 17.7, 10.1], to_rgb=True)
 img_scale = (512,512)
 crop_size = (256,256)
 train_pipeline = [
@@ -10,14 +11,15 @@ train_pipeline = [
     dict(type='LoadAnnotations'),
     dict(type='Resize', img_scale=(512, 512), ratio_range=(0.5, 2.0)),
     dict(type='RandomCrop', crop_size=crop_size, cat_max_ratio=0.75),
+    # dict(type='RandomCutMix',prob=0.7,n_holes=2,cutout_shape=[(90,90),(100,65)]),
     dict(type='RandomFlip', prob=0.5,direction='horizontal'),
     dict(type='RandomFlip', prob=0.5,direction='vertical'),
-    dict(type='RandomRotate',prob=0.5,degree=90),
+    dict(type='RandomRotate',prob=0.5,degree=(90,270)),
     dict(type='PhotoMetricDistortion'),
     dict(
         type='Normalize',
-        mean=[20.626388, 21.765834, 20.000833],
-        std=[10.294722, 9.351111, 8.964583],
+        mean=[62.5, 44.8, 68.8],
+        std=[13.1, 17.7, 10.1],
         to_rgb=True),
     dict(type='DefaultFormatBundle'),
     dict(type='Collect', keys=['img', 'gt_semantic_seg'])
@@ -39,8 +41,8 @@ test_pipeline = [
 ]
 
 data = dict(
-    samples_per_gpu=16,#batchsize
-    workers_per_gpu=7,
+    samples_per_gpu=10,#batchsize
+    workers_per_gpu=9,
     train=dict(
             type=dataset_type,
             data_root=data_root,
@@ -56,6 +58,7 @@ data = dict(
     test=dict(
         type=dataset_type,
         data_root=data_root,
-        img_dir='img_dir/val2',
+        img_dir='test_a',
         ann_dir='ann_dir/val2',
         pipeline=test_pipeline))
+

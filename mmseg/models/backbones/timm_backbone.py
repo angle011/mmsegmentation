@@ -67,7 +67,7 @@ class TIMMBackbone(BaseModule):
         self.skip_channel=skip_channel
         self.out_channel =[]
         self.out_channel=[ 2**(i+4) for i in reversed(range(len(channel_list)))]
-        kwarg = dict(use_batchnorm=True, attention_type=None)
+        kwarg = dict(use_batchnorm=True)
         for in_ch, skip_ch, out_ch in zip(self.channel, self.skip_channel, self.out_channel):
             self.decoder_EFF.append(DecoderBlock(in_ch, skip_ch, out_ch, **kwarg))
             # print(in_ch,skip_ch,out_ch)
@@ -96,7 +96,6 @@ class DecoderBlock(nn.Module):
             skip_channels,
             out_channels,
             use_batchnorm=True,
-            attention_type=None,
     ):
         super().__init__()
         self.conv1 = Conv2dReLU(
@@ -133,12 +132,6 @@ class Conv2dReLU(nn.Sequential):
             use_batchnorm=True,
     ):
 
-        if use_batchnorm == "inplace" and InPlaceABN is None:
-            raise RuntimeError(
-                "In order to use `use_batchnorm='inplace'` inplace_abn package must be installed. "
-                + "To install see: https://github.com/mapillary/inplace_abn"
-            )
-
         conv = nn.Conv2d(
             in_channels,
             out_channels,
@@ -149,14 +142,6 @@ class Conv2dReLU(nn.Sequential):
         )
         relu = nn.ReLU(inplace=True)
 
-        if use_batchnorm == "inplace":
-            bn = InPlaceABN(out_channels, activation="leaky_relu", activation_param=0.0)
-            relu = nn.Identity()
-
-        elif use_batchnorm and use_batchnorm != "inplace":
-            bn = nn.BatchNorm2d(out_channels)
-
-        else:
-            bn = nn.Identity()
+        bn = nn.BatchNorm2d(out_channels)
 
         super(Conv2dReLU, self).__init__(conv, bn, relu)

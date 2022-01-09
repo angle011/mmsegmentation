@@ -147,9 +147,9 @@ def batch_save_result_submit():
     subm=[]
     parser = ArgumentParser()
     parser.add_argument('--img', default='./tianchi_SegGame/test_a/*.jpg', help='Image file')
-    parser.add_argument('--config', default='./configs/unet/pspnet_unet_s5-d16_128x128_40k_chase_db1_my.py',
+    parser.add_argument('--config', default='./configs/ocrnet/ocrnet_hr18_512x1024_40k_cityscapes_my.py',
                         help='Config file')
-    parser.add_argument('--checkpoint', default='/data/open-mmlab_log_dir/demo/log/iter_15000.pth',
+    parser.add_argument('--checkpoint', default='/home/liu1227/anaconda3/envs/open-mmlab/lib/python3.7/site-packages/mmsegmentation/tools/work_dirs/ocrnet_hr18_512x1024_40k_cityscapes_my/iter_100000.pth',
                         help='Checkpoint file')
     parser.add_argument(
         '--device', default='cuda:0', help='Device used for inference')
@@ -208,10 +208,10 @@ def batch_save_result_submit():
 
     subm=[]
     parser = ArgumentParser()
-    parser.add_argument('--img', default='./tianchi_SegGame/test_a/*.jpg', help='Image file')
-    parser.add_argument('--config', default='./configs/unet/pspnet_unet_s5-d16_128x128_40k_chase_db1_my.py',
+    parser.add_argument('--img', default='./dataset/test_a/*.jpg', help='Image file')
+    parser.add_argument('--config', default='./configs/ocrnet/ocrnet_hr18_512x1024_40k_cityscapes_my.py',
                         help='Config file')
-    parser.add_argument('--checkpoint', default='/data/open-mmlab_log_dir/demo/log/iter_15000.pth',
+    parser.add_argument('--checkpoint', default='/home/liu1227/anaconda3/envs/open-mmlab/lib/python3.7/site-packages/mmsegmentation/tools/work_dirs/ocrnet_hr18_512x1024_40k_cityscapes_my/iter_100000.pth',
                         help='Checkpoint file')
     parser.add_argument(
         '--device', default='cuda:0', help='Device used for inference')
@@ -230,10 +230,10 @@ def batch_save_result_submit():
     model = init_segmentor(args.config, args.checkpoint, device=args.device)
     # test a single image
     # list_img=glob.glob(args.img)
-    test_mask = pd.read_csv('./tianchi_SegGame/test_a_samplesubmit.csv', sep='\t', names=['name', 'mask'])
+    test_mask = pd.read_csv('./dataset/test_a_samplesubmit.csv', sep='\t', names=['name', 'mask'])
     test_mask['name'] = test_mask['name'].apply(lambda x: x)
     for i in tqdm(range(2500)):
-        result = inference_segmentor(model, './tianchi_SegGame/test_a/' + test_mask['name'].iloc[i])
+        result = inference_segmentor(model, './dataset/test_a/' + test_mask['name'].iloc[i])
         result = np.array(result)
         result = result.astype('uint8').transpose(1, 2, 0)
         # print(type(result),result.shape)
@@ -245,7 +245,7 @@ def batch_save_result_submit():
 
         subm.append([osp.basename(test_mask['name'].iloc[i]), rle_encode(result)])
     subm = pd.DataFrame(subm)
-    subm.to_csv('./tianchi_SegGame/tmp.csv', index=None, header=None, sep='\t')
+    subm.to_csv('./dataset/tmp_HRNet.csv', index=None, header=None, sep='\t')
 
     # mmcv.imshow(result)
     # show the results
@@ -269,23 +269,15 @@ def _test_TIMMbackbone():
 
     pass
 
-def anasys_cls_pxiel_num(path):
 
-    num_fgs=[]
-    list=glob.glob(path)
-    for i in tqdm(range(200)):
-        num_fg = 0
-        num_bg=0
-        img = mmcv.imread(list[i])
-        img=img[:,:,0]
-        for j in range(img.shape[0]):
-             for k in range(img.shape[1]):
-                if img[j,k]==1: num_fg=num_fg+1
-                else:num_bg=num_bg+1
-        # print(num_fg,num_bg)
-        num_fgs.append(num_fg)
-
-    print(np.array(num_fgs).mean())
+def check_pth_file():
+    dict=torch.load('/data/ocrnet_hr48_512x512_160k_ade20k_20200615_184705-a073726d.pth')
+    # print(type(dict))
+    for k,v in dict.items():
+        if k !='meta':
+            for key,value in v.items():
+                print('%s:  %s'%(key,value.shape))
+        # exit()
     pass
 
 if __name__ =='__main__':
@@ -295,9 +287,13 @@ if __name__ =='__main__':
     # print()
     # net_result_check('0BMSWJQU5M.png')
     # submit()
-    batch_save_result_submit()
+
+    # batch_save_result_submit()
+
+    # check_pth_file()
     # rle_load_test('./tianchi_SegGame/tmp.csv')
     # _test_TIMMbackbone()
     # anasys_cls_pxiel_num('./tianchi_SegGame/ann_dir/train/*.png')
 
+    os.rename('/home/liu1227/anaconda3/envs/open-mmlab/lib/python3.7/site-packages/mmsegmentation/000005_GF.tif','/home/liu1227/anaconda3/envs/open-mmlab/lib/python3.7/site-packages/mmsegmentation/000005_GF.png')
     pass

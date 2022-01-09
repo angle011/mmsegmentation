@@ -147,7 +147,7 @@ class BaseDecodeHead(BaseModule, metaclass=ABCMeta):
             else:
                 self.in_channels = in_channels
         else:
-            assert isinstance(in_channels, int)
+            # assert isinstance(in_channels, int)
             assert isinstance(in_index, int)
             self.in_channels = in_channels
 
